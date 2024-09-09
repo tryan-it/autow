@@ -1,0 +1,90 @@
+### Snippets for Terraform
+
+# AWS Virtual Private Gateway and VPN Connection Module
+
+# Create a Virtual Private Gateway
+resource "aws_vpn_gateway" "vpn_gateway" {
+  vpc_id = var.vpc_id
+  tags = {
+    Name = "MyVPNGateway"
+  }
+}
+
+# Create a Customer Gateway
+resource "aws_customer_gateway" "customer_gateway" {
+  bgp_asn    = var.customer_gateway_bgp_asn
+  ip_address = var.customer_gateway_ip_address
+  type       = "ipsec.1"
+
+  tags = {
+    Name = "MyCustomerGateway"
+  }
+}
+
+# Create a VPN Connection
+resource "aws_vpn_connection" "main" {
+  vpn_gateway_id      = aws_vpn_gateway.vpn_gateway.id
+  customer_gateway_id = aws_customer_gateway.customer_gateway.id
+  type                = "ipsec.1"
+  static_routes_only  = true
+
+  tags = {
+    Name = "MyVPNConnection"
+  }
+}
+
+# Create VPN Connection Routes
+resource "aws_vpn_connection_route" "office" {
+  count                  = length(var.remote_cidr_blocks)
+  destination_cidr_block = var.remote_cidr_blocks[count.index]
+  vpn_connection_id      = aws_vpn_connection.main.id
+}
+
+# Attach the VPN Gateway to specified subnets
+resource "aws_vpn_gateway_route_propagation" "example" {
+  count          = length(var.subnet_ids)
+  vpn_gateway_id = aws_vpn_gateway.vpn_gateway.id
+  route_table_id = var.subnet_route_table_ids[count.index]
+}
+
+# Variables
+variable "vpc_id" {
+  description = "The ID of the VPC"
+  type        = string
+}
+
+variable "customer_gateway_bgp_asn" {
+  description = "The BGP ASN of the customer gateway"
+  type        = number
+}
+
+variable "customer_gateway_ip_address" {
+  description = "The IP address of the customer gateway's outside interface"
+  type        = string
+}
+
+variable "remote_cidr_blocks" {
+  description = "List of CIDR blocks to be routed through the VPN connection"
+  type        = list(string)
+}
+
+variable "subnet_ids" {
+  description = "List of subnet IDs to attach to the VPN gateway"
+  type        = list(string)
+}
+
+variable "subnet_route_table_ids" {
+  description = "List of route table IDs associated with the specified subnets"
+  type        = list(string)
+}
+
+# Outputs
+output "vpn_connection_id" {
+  description = "The ID of the VPN connection"
+  value       = aws_vpn_connection.main.id
+}
+
+output "vpn_gateway_id" {
+  description = "The ID of the Virtual Private Gateway"
+  value       = aws_vpn_gateway.vpn_gateway.id
+}
