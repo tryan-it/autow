@@ -1,0 +1,45 @@
+#!/bin/bash
+
+# Script to connect to Oracle expdp console and kill jobs, incrementing from 01 to 30
+
+for i in $(seq -f "%02g" 1 30)
+do
+    echo "Attempting to connect to expdp job with suffix _$i"
+    
+    # Connect to the expdp console
+    sqlplus / as sysdba <<EOF
+    
+    -- Find the job ID
+    VARIABLE job_id NUMBER;
+    BEGIN
+      SELECT job_id INTO :job_id
+      FROM dba_datapump_jobs
+      WHERE job_name LIKE 'SYS_EXPORT_TABLE_%_$i'
+        AND state = 'EXECUTING'
+        AND ROWNUM = 1;
+    
+      IF :job_id IS NOT NULL THEN
+        -- Attach to the job
+        DBMS_DATAPUMP.ATTACH(:job_id, 'SYS_EXPORT_TABLE_%_$i');
+        
+        -- Stop the job
+        DBMS_DATAPUMP.STOP_JOB(:job_id, 1, 0);
+        
+        DBMS_OUTPUT.PUT_LINE('Successfully stopped job with ID ' || :job_id);
+      ELSE
+        DBMS_OUTPUT.PUT_LINE('No active expdp job found with suffix _$i');
+      END IF;
+    EXCEPTION
+      WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Error: ' || SQLERRM);
+    END;
+    /
+    
+    EXIT;
+EOF
+
+    echo "Finished processing job with suffix _$i"
+    echo "----------------------------------------"
+done
+
+echo "Script completed."
