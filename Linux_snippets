@@ -1,0 +1,2 @@
+### Leapp upgrade snippet for adding PermitRootLogin inhibit-password to ssh_config
+sudo sed -i '/PermitRootLogin.*/{h;s/PermitRootLogin.*/PermitRootLogin inhibit-password/};${x;/^$/{s//PermitRootLogin inhibit-password/;H};x}' /etc/ssh/ssh_config
