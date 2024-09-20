@@ -9,23 +9,23 @@ do
     # Connect to the expdp console
     sqlplus / as sysdba <<EOF
     
-    -- Find the job ID
-    VARIABLE job_id NUMBER;
+    -- Find the job name
+    VARIABLE job_name VARCHAR2(100);
     BEGIN
-      SELECT job_id INTO :job_id
+      SELECT job_name INTO :job_name
       FROM dba_datapump_jobs
       WHERE job_name LIKE 'SYS_EXPORT_TABLE_%_$i'
         AND state = 'EXECUTING'
         AND ROWNUM = 1;
     
-      IF :job_id IS NOT NULL THEN
+      IF :job_name IS NOT NULL THEN
         -- Attach to the job
-        DBMS_DATAPUMP.ATTACH(:job_id, 'SYS_EXPORT_TABLE_%_$i');
+        DBMS_DATAPUMP.ATTACH(:job_name, :job_name);
         
         -- Stop the job
-        DBMS_DATAPUMP.STOP_JOB(:job_id, 1, 0);
+        DBMS_DATAPUMP.STOP_JOB(:job_name, 1, 0);
         
-        DBMS_OUTPUT.PUT_LINE('Successfully stopped job with ID ' || :job_id);
+        DBMS_OUTPUT.PUT_LINE('Successfully stopped job: ' || :job_name);
       ELSE
         DBMS_OUTPUT.PUT_LINE('No active expdp job found with suffix _$i');
       END IF;
