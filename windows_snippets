@@ -1,0 +1,22 @@
+### Move multiple subdirectories to a particular location
+# Define the destination path
+$destinationDir = "C:\TargetFolder"  # Change this to your desired destination
+
+# Create destination directory if it doesn't exist
+if (!(Test-Path -Path $destinationDir)) {
+    New-Item -ItemType Directory -Path $destinationDir
+}
+
+# Loop through subdirectories 1 and 2
+for ($i = 1; $i -le 2; $i++) {
+    $sourceDir = ".\$i"  # This will create .\1 and .\2
+    
+    if (Test-Path -Path $sourceDir) {
+        Write-Host "Moving contents from subdirectory $i..."
+        Get-ChildItem -Path $sourceDir | Move-Item -Destination $destinationDir -Force
+    } else {
+        Write-Host "Warning: Subdirectory $i does not exist"
+    }
+}
+
+Write-Host "File moving process completed!"
