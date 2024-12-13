@@ -9,7 +9,6 @@ sudo sed -i '/PermitRootLogin.*/{h;s/PermitRootLogin.*/PermitRootLogin inhibit-p
 log_home="/home/oracle/logs"
 log_file="oracle_backup_cleanup.log"
 log_path="${log_home}/${log_file}"
-date=date
 
 # Create log file if it doesn't exist
 mkdir -p $log_home && touch $log_path
