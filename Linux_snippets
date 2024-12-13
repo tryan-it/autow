@@ -5,6 +5,15 @@ sudo sed -i '/PermitRootLogin.*/{h;s/PermitRootLogin.*/PermitRootLogin inhibit-p
 ### Remove DMPs that are older than 45 days
 #!/bin/bash
 
+# Define variables
+log_home="/home/oracle/logs"
+log_file="oracle_backup_cleanup.log"
+log_path="${log_home}/${log_file}"
+date=date
+
+# Create log file if it doesn't exist
+mkdir -p $log_home && touch $log_path
+
 # Find files with .DMP extension and older than 45 days
 # Delete them and store their names and creation dates
 
@@ -12,7 +21,7 @@ echo "Deleting .DMP files older than 45 days:"
 
 find . -type f -name "*.DMP" -mtime +45 | while read file; do
     creation_date=$(stat -c %y "$file" | cut -d' ' -f1)
-    echo "Deleting: $file (Created: $creation_date)"
+    echo "$(date) INFO: Deleting: $file (Created: $creation_date)" >> $log_path
     rm "$file"
 done
 
