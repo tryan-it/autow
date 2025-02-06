@@ -25,3 +25,39 @@ find . -type f -name "*.DMP" -mtime +45 | while read file; do
 done
 
 echo "Deletion process completed."
+
+
+### Validate that kernel and initfs are available for the grub menuentries
+#!/bin/bash
+
+vm_files=()
+initrd_files=()
+clean_status=true
+
+while IFS= read -r line; do
+    vm_files+=( "$line" )
+done < <( grep -o -P "vmlinuz-[0-9]+\.[0-9]+\.[0-9]+-[0-9]+-generic" /boot/grub/grub.cfg | uniq )
+
+while IFS= read -r line; do
+    initrd_files+=( "$line" )
+done < <(grep -o -P "initrd.img-[0-9]+\.[0-9]+\.[0-9]+-[0-9]+-generic" /boot/grub/grub.cfg | uniq )
+
+for element in "${vm_files[@]}"
+do
+    if [ ! -f "/boot/$element" ];
+    then
+        echo "STATUS=CHECK" > ~/boot_check
+        exit
+    fi
+done
+
+for elment in "${initrd_files[@]}"
+do
+    if [ ! -f "/boot/$element" ];
+    then
+        echo "STATUS=CHECK" > ~/boot_check
+        exit
+    fi
+done
+
+echo "STATUS=CLEAN" > ~/boot_check
